@@ -11,7 +11,7 @@
 #    Step 3: Collect different files to new and old folder.
 #            This is realized in function ``make_new_old()``
 #
-#    Sample: python patch_collector.py -s "2019-1-9 0:0:0" -d "/home/willie/work/repo_qcom835/" -o "/home/willie/work/idealens_oem"
+#    Sample: python gerrit_make_new_old_patch.py -s "2019-1-9 0:0:0" -d "/home/willie/work/repo_qcom835/" -o "/home/willie/work/idealens_oem"
 
 import datetime
 import optparse
@@ -61,8 +61,9 @@ def create_output_folder(base_folder_path, project_path_list):
                                                                                              len(project_path_list)))
     out_new_base_dir = base_folder_path + '/out/new/'
     out_old_base_dir = base_folder_path + '/out/old/'
-    # delete exist files in folder firstly.
-    os.system('rm -rf {0} {1}'.format(out_new_base_dir, out_old_base_dir))
+    # delete out folder in folder firstly.
+    print('delete out folder firstly')
+    os.system('rm -rf {0}'.format(base_folder_path + '/out'))
 
     for project_path in project_path_list:
         new_project_path = out_new_base_dir + project_path
@@ -75,7 +76,7 @@ def create_output_folder(base_folder_path, project_path_list):
     print('create_output_folder done successfully')
 
 
-def make_new_old(git_project_path, output_base_folder, relative_project_path, start_time, end_time):
+def make_new_old(git_project_path, output_base_folder, relative_project_path, start_time, end_time, log_file):
     """
     Make different files to out new and old folders.\n
     :param git_project_path: full path of git project.
@@ -83,6 +84,7 @@ def make_new_old(git_project_path, output_base_folder, relative_project_path, st
     :param relative_project_path: the relative path of project.
     :param start_time: the lower limit of time
     :param end_time: the upper limit of time
+    :param log_file: log file
     :return: None
     """
 
@@ -100,19 +102,32 @@ def make_new_old(git_project_path, output_base_folder, relative_project_path, st
     # Use ``-1`` to show top 1 log.
     # If either old or new commit-id not exist, rm ``out/new`` and ``out/old`` folder and return directly.
 
-    str_fetch_old_log_cmd = 'git log --no-merges --pretty="%H" --before="{}" -1'.format(start_time)
-    old_commit_id = os.popen(str_fetch_old_log_cmd).read().strip()
-    if (old_commit_id is None) or (old_commit_id == ""):
+    str_fetch_old_log_cmd = 'git log --no-merges --pretty="%ci_%H" --before="{}" -1'.format(start_time)
+    old_time_commit_id = os.popen(str_fetch_old_log_cmd).read().strip()
+    if (old_time_commit_id is None) or (old_time_commit_id == ""):
         print('No old commit id. No need to create new old patch.')
+        log_file.write('\tNo need to create new old patch.\n')
         os.system('rm -rf {0} {1}'.format(curr_project_out_new_full_path, curr_project_out_old_full_path))
         return
-    str_fetch_new_log_cmd = 'git log --no-merges --pretty="%H" --since="{}" --before="{}" -1'.format(start_time,
+
+    str_fetch_new_log_cmd = 'git log --no-merges --pretty="%ci_%H" --since="{}" --before="{}" -1'.format(start_time,
                                                                                                      end_time)
-    new_commit_id = os.popen(str_fetch_new_log_cmd).read().strip()
-    if (new_commit_id is None) or (new_commit_id == ""):
+    new_time_commit_id = os.popen(str_fetch_new_log_cmd).read().strip()
+    if (new_time_commit_id is None) or (new_time_commit_id == ""):
         print('No new commit id. No need to create new old patch.')
+        log_file.write('\tNo need to create new old patch.\n')
         os.system('rm -rf {0} {1}'.format(curr_project_out_new_full_path, curr_project_out_old_full_path))
         return
+
+    old_split_index = old_time_commit_id.index('_')
+    new_split_index = new_time_commit_id.index('_')
+    old_commit_time = old_time_commit_id[:old_split_index]
+    new_commit_time = new_time_commit_id[:new_split_index]
+    old_commit_id = old_time_commit_id[old_split_index + 1:]
+    new_commit_id = new_time_commit_id[new_split_index + 1:]
+
+    log_file.write('\tOld CommitTime is {}\t\t CommitId is {}\n'.format(old_commit_time, old_commit_id))
+    log_file.write('\tNew CommitTime is {}\t\t CommitId is {}\n'.format(new_commit_time, new_commit_id))
 
     # Fourthly run command to
     # willie note here 2019-1-16
@@ -135,6 +150,7 @@ def make_new_old(git_project_path, output_base_folder, relative_project_path, st
     print(str_git_archive_old_cmd)
     os.system(str_git_archive_old_cmd)
     print('make_new_old {} done\n'.format(project_path))
+    log_file.write('\tPatch {} done successfully\n\n'.format(git_project_path))
 
 
 if __name__ == '__main__':
@@ -147,6 +163,7 @@ if __name__ == '__main__':
     else:
         start_time = datetime.datetime.strptime(options.start_time, '%Y-%m-%d  %H:%M:%S')
         print('set start_time={}'.format(start_time))
+    str_start_time = start_time.strftime("%Y-%m-%d %H:%M:%S")
 
     end_time = datetime.datetime.now()
     if (options.end_time is None) or (options.end_time == ""):
@@ -154,6 +171,7 @@ if __name__ == '__main__':
     else:
         end_time = datetime.datetime.strptime(options.end_time, '%Y-%m-%d  %H:%M:%S')
         print('Set end_time={}'.format(end_time))
+    str_end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
     repo_base_directory = os.path.dirname(os.path.realpath(__file__))
     if (options.work_directory is None) or (options.work_directory == ""):
@@ -169,7 +187,7 @@ if __name__ == '__main__':
         oem_git_directory = options.oem_directory
         print('Set oem_git_directory={}'.format(oem_git_directory))
 
-    # Seconly check exist of invision_repo_path
+    # Secondly check exist of invision_repo_path
     invision_repo_path = repo_base_directory + '.repo/manifests/invision_repo.xml'
     print('invision_repo_path={}'.format(invision_repo_path))
     if not os.path.exists(invision_repo_path):
@@ -181,20 +199,38 @@ if __name__ == '__main__':
     # Append oem folder.
     project_path_list.append('oem')
 
+
     # Fourthly prepare output folder
     curr_working_folder_path = os.path.dirname(os.path.realpath(__file__))
     out_base_folder_path = curr_working_folder_path
     create_output_folder(out_base_folder_path, project_path_list)
 
-    # Fifthly iterate all projects and make new/old folder.
-    for project_path in project_path_list:
+    # Fifthly Create log file.
+    str_time_now = datetime.datetime.now().strftime('%Y-%m-%d__%H-%M-%S')
+    str_log_file = out_base_folder_path + '/out/willie_patch_log_' + str_time_now
+    log_file = open(str_log_file, 'w')
+    log_file.write('Start creating patch at {}\n\n'.format(str_time_now))
+    log_file.write('start_time={}\n'.format(str_start_time))
+    log_file.write('end_time={}\n'.format(str_end_time))
+    log_file.write('repo_base_directory={}\n'.format(repo_base_directory))
+    log_file.write('oem_git_directory={}\n\n'.format(oem_git_directory))
+    log_file.write('Start handling {} projects in branch idealens:\n'.format(len(project_path_list)))
+
+    # Sixthly iterate all projects and make new/old folder.
+    for idx, project_path in enumerate(project_path_list):
+        log_file.write('{}: current project path is {}\n'.format(idx, project_path))
         git_project_path = repo_base_directory + project_path
         if 'oem' == project_path:
             git_project_path = oem_git_directory
         # Here change back datetime.time to string
-        make_new_old(git_project_path, out_base_folder_path, project_path, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-                     end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        make_new_old(git_project_path, out_base_folder_path, project_path, str_start_time, str_end_time, log_file)
 
     # Change back to original folder
     os.chdir(curr_working_folder_path)
+    log_file.write('Mission complete!\n')
+    log_file.close()
+
+    # Seventhly zip out folder
+    str_zip_cmd = 'zip -r new_old_{}.zip {}'.format(str_time_now, 'out')
+    os.system(str_zip_cmd)
     print('\n\nMission complete!')
