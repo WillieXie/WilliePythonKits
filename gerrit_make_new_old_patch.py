@@ -12,6 +12,10 @@
 #            This is realized in function ``make_new_old()``
 #
 #    Sample: python gerrit_make_new_old_patch.py -s "2019-1-9 0:0:0" -d "/home/willie/work/repo_qcom835/" -o "/home/willie/work/idealens_oem"
+#
+#
+# Version: 1.1 2019-2-16 When there is no commit before the specific date in one repository, use the first commit as old commit.
+
 
 import datetime
 import optparse
@@ -105,17 +109,23 @@ def make_new_old(git_project_path, output_base_folder, relative_project_path, st
     str_fetch_old_log_cmd = 'git log --no-merges --pretty="%ci_%H" --before="{}" -1'.format(start_time)
     old_time_commit_id = os.popen(str_fetch_old_log_cmd).read().strip()
     if (old_time_commit_id is None) or (old_time_commit_id == ""):
-        print('No old commit id. No need to create new old patch.')
-        log_file.write('\tNo need to create new old patch.\n')
-        os.system('rm -rf {0} {1}'.format(curr_project_out_new_full_path, curr_project_out_old_full_path))
-        return
+        # Current repository is created after old_time, so firstly try to fetch the first commit_id:
+        print('old_time_commit_id is empty, try to fetch first commit')
+        str_fetch_first_log_cmd = 'git log --no-merges --pretty="%ci_%H" | tail -n 1'
+        old_time_commit_id = os.popen(str_fetch_first_log_cmd).read().strip()
+        if (old_time_commit_id is None) or (old_time_commit_id == ""):
+            # There isn't any commit in this repository, return directly
+            print('There is no commit id. No need to create new old patch.')
+            log_file.write('\tNo need to create new old patch.\n')
+            os.system('rm -rf {0} {1}'.format(curr_project_out_new_full_path, curr_project_out_old_full_path))
+            return
 
     str_fetch_new_log_cmd = 'git log --no-merges --pretty="%ci_%H" --since="{}" --before="{}" -1'.format(start_time,
                                                                                                      end_time)
     new_time_commit_id = os.popen(str_fetch_new_log_cmd).read().strip()
     if (new_time_commit_id is None) or (new_time_commit_id == ""):
         print('No new commit id. No need to create new old patch.')
-        log_file.write('\tNo need to create new old patch.\n')
+        log_file.write('\tNo need to create new old patch.\n\n')
         os.system('rm -rf {0} {1}'.format(curr_project_out_new_full_path, curr_project_out_old_full_path))
         return
 
@@ -204,6 +214,7 @@ if __name__ == '__main__':
     curr_working_folder_path = os.path.dirname(os.path.realpath(__file__))
     out_base_folder_path = curr_working_folder_path
     create_output_folder(out_base_folder_path, project_path_list)
+
 
     # Fifthly Create log file.
     str_time_now = datetime.datetime.now().strftime('%Y-%m-%d__%H-%M-%S')
