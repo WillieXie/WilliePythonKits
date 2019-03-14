@@ -11,7 +11,7 @@
 #    Step 3: Collect different files to new and old folder.
 #            This is realized in function ``make_new_old()``
 #
-#    Sample: python gerrit_make_new_old_patch.py -s "2019-1-9 0:0:0" -d "/home/willie/work/repo_qcom835/" -o "/home/willie/work/idealens_oem"
+# Sample: python3 gerrit_make_new_old_patch.py -s "2019-1-9 0:0:0" -d "/home/willie/work/repo_qcom835/" -o "/home/willie/work/idealens_oem"
 #
 #
 # Version: 1.1 2019-2-16 When there is no commit before the specific date in one repository, use the first commit as old commit.
@@ -24,8 +24,8 @@ import sys
 import xml.etree.ElementTree as ET
 
 global_options = optparse.OptionParser(
-    usage="patch_collector COMMAND [ARGS]"
-    , version="%prog 1.0")
+    usage="gerrit_make_new_old_patch COMMAND [ARGS]"
+    , version="%prog 1.1")
 global_options.add_option('-s', '--start', action='store', type='string', dest='start_time', default='',
                           help='start time, default is today 00:00')
 global_options.add_option('-e', '--end', action='store', type='string', dest='end_time', default='',
