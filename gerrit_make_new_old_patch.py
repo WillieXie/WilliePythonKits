@@ -11,11 +11,11 @@
 #    Step 3: Collect different files to new and old folder.
 #            This is realized in function ``make_new_old()``
 #
-# Sample: python3 gerrit_make_new_old_patch.py -s "2019-1-9 0:0:0" -d "/home/willie/work/repo_qcom835/" -o "/home/willie/work/idealens_oem"
+# Sample: python3 gerrit_make_new_old_patch.py -s "2019-3-20 15:36:0" -d "/home/willie/work/idealens" -o "/home/willie/work/idealens_oem/amss_standard_oem"
 #
 #
 # Version: 1.1 2019-2-16 When there is no commit before the specific date in one repository, use the first commit as old commit.
-
+# Version: 1.2 2019-3-27 If input work directory not end with "/", add it.
 
 import datetime
 import optparse
@@ -188,6 +188,8 @@ if __name__ == '__main__':
         print('Input work_directory is empty set repo_base_directory={}'.format(repo_base_directory))
     else:
         repo_base_directory = options.work_directory
+        if not repo_base_directory.endswith('/'):
+            repo_base_directory = repo_base_directory + '/'
         print('Set repo_base_directory={}'.format(repo_base_directory))
 
     oem_git_directory = os.path.dirname(os.path.realpath(__file__))
@@ -195,6 +197,8 @@ if __name__ == '__main__':
         print('Input oem_directory is empty set oem_git_directory={}'.format(oem_git_directory))
     else:
         oem_git_directory = options.oem_directory
+        if not oem_git_directory.endswith('/'):
+            oem_git_directory = oem_git_directory + '/'
         print('Set oem_git_directory={}'.format(oem_git_directory))
 
     # Secondly check exist of invision_repo_path
