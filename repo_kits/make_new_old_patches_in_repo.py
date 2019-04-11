@@ -17,7 +17,7 @@
 #
 # Sample 2: Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
 #
-#    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem"
+#    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem" -b "master"
 #
 #
 # Version: 1.1 2019-2-16 When there is no commit before the specific date in one repository, use the first commit as old commit.

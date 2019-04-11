@@ -1,20 +1,16 @@
 # WilliePythonKits
 Use python to reduce some burden work
 
-- [Repo Kits](##RepoKits)
+- [Repo Kits](#repokits)
 
 ## RepoKits
 
-- [make_new_old_patches_in_repo](###make_new_old_patches_in_repo)
-- [create_mirror_repo_from_local_folder](###create_mirror_repo_from_local_folder)
+- [make_new_old_patches_in_repo](#make_new_old_patches_in_repo)
+- [create_mirror_repo_from_local_folder](#create_mirror_repo_from_local_folder)
 
 ### make_new_old_patches_in_repo
 
-- [DESCRIPTION](####DESCRIPTION)
-- [OPTIONS](####OPTIONS)
-- [SAMPLE](####SAMPLE)
-
-#### DESCRIPTION
+## DESCRIPTION
 
 **Make new old patches** under [repo](https://source.android.com/source/using-repo.html) working folder.
 
@@ -55,14 +51,10 @@ Then iterating all matched projects and make new old patch. The output is under 
 2. Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
 
    ``` bash
-   python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem"
+   python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem" -b "master"
    ```
 
-## create_mirror_repo_from_local_folder
-
-- [DESCRIPTION](####DESCRIPTION)
-- [OPTIONS](####OPTIONS)
-- [SAMPLE](####SAMPLE)
+### create_mirror_repo_from_local_folder
 
 #### DESCRIPTION
 
