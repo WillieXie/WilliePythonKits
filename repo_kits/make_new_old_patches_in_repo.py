@@ -2,7 +2,7 @@
 #
 # Author: Willie
 # Version: 1.0 2019-1-15
-#    Step 1: Parse manifest.xml in .repo/manifests/invision_repo.xml, to fetch all <project> note that has attribute
+#    Step 1: Parse manifest.xml in .repo/manifests/default.xml, to fetch all <project> note that has attribute
 #            ``revision = "`branch_name`"``. Then Store attribute ``path`` to list.
 #            This is realized in function ``parse_manifest_xml()``
 #    Step 2: The output new old folder is in current folder. Need to create ``out/new`` and ``out/old`` sub folders,
@@ -11,13 +11,13 @@
 #    Step 3: Collect different files to new and old folder.
 #            This is realized in function ``make_new_old()``
 #
-# Sample 1: Make patch for single project "/home/willie/work/idealens_version/frameworks/native" in branch "idealens", the manifest use "invision_repo.xml"
+# Sample 1: Make patch for single project `/home/willie/work/aosp/frameworks/native` in branch `dev`, the manifest use `default.xml`
 #
-#    python3 make_new_old_patches_in_repo.py -s "2019-3-28 11:48:30" -d "/home/willie/work/idealens_version" -m "invision_repo.xml" -b "idealens" -p "frameworks/native"
+#    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -m "default.xml" -b "dev" -p "frameworks/native"
 #
-# Sample 2: Make patch for all projects in folder "/home/willie/work/idealens_version" and oem folder "/home/willie/work/idealens_oem/amss_standard_oem" whose branch is "master":
+# Sample 2: Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
 #
-#    python3 make_new_old_patches_in_repo.py -s "2019-3-28 11:48:30" -d "/home/willie/work/idealens_version" -o "/home/willie/work/idealens_oem/amss_standard_oem"
+#    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem"
 #
 #
 # Version: 1.1 2019-2-16 When there is no commit before the specific date in one repository, use the first commit as old commit.
@@ -318,13 +318,6 @@ if __name__ == '__main__':
     else:
         single_project_path = options.project_path
         print('Set single_project_path={}'.format(single_project_path))
-
-    # # Secondly check exist of invision_repo_path
-    # invision_repo_path = repo_base_directory + '.repo/manifests/invision_repo.xml'
-    # print('invision_repo_path={}'.format(invision_repo_path))
-    # if not os.path.exists(invision_repo_path):
-    #     print('Error {} is not valid'.format(invision_repo_path))
-    #     sys.exit()
 
     # Secondly parse manifest xml
     project_path_remote_name_dict = {}

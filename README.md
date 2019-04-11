@@ -18,7 +18,7 @@ Use python to reduce some burden work
 
 **Make new old patches** under [repo](https://source.android.com/source/using-repo.html) working folder.
 
-`make_new_old_patches_in_repo.py` will check manifest.xml under ``.repo/manifests/`` folder and find all projects that has the specified branch.
+[`make_new_old_patches_in_repo.py`](https://github.com/WillieXie/WilliePythonKits/blob/master/repo_kits/make_new_old_patches_in_repo.py) will check manifest.xml under ``.repo/manifests/`` folder and find all projects that has the specified branch.
 
 Then iterating all matched projects and make new old patch. The output is under current ``out`` folder. And it will be compressed to zip file.
 
@@ -46,16 +46,16 @@ Then iterating all matched projects and make new old patch. The output is under 
 
 #### SAMPLE
 
-1. Make patch for single project "/home/willie/work/idealens_version/frameworks/native" in branch "idealens", the manifest use "invision_repo.xml":
+1. Make patch for single project `/home/willie/work/aosp/frameworks/native` in branch `dev`, the manifest use `default.xml`
 
    ``` bash
-   python3 make_new_old_patches_in_repo.py -s "2019-3-28 11:48:30" -d "/home/willie/work/idealens_version" -m "invision_repo.xml" -b "idealens" -p "frameworks/native"
+   python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -m "default.xml" -b "dev" -p "frameworks/native"
    ```
 
-2. Make patch for all projects in folder "/home/willie/work/idealens_version" and oem folder "/home/willie/work/idealens_oem/amss_standard_oem" whose branch is "master":
+2. Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
 
    ``` bash
-   python3 make_new_old_patches_in_repo.py -s "2019-3-28 11:48:30" -d "/home/willie/work/idealens_version" -o "/home/willie/work/idealens_oem/amss_standard_oem"
+   python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem"
    ```
 
 ## create_mirror_repo_from_local_folder
@@ -71,7 +71,7 @@ Then iterating all matched projects and make new old patch. The output is under 
 There exists one working repo directory. It has spent tons of time syncing from remote server(For example: AOSP).
 Now I want to create mirror repo directory in local server, however **DO NOT** sync from remote server(spending tons of time again).
 
-`create_mirror_repo_from_local_folder.py` can parse the downloaded working repo directory and create mirror repo directory.
+[`create_mirror_repo_from_local_folder.py`](https://github.com/WillieXie/WilliePythonKits/blob/master/repo_kits/create_mirror_repo_from_local_folder.py) can parse the downloaded working repo directory and create mirror repo directory.
 
 #### OPTIONS
 
