@@ -15,6 +15,10 @@
 #
 #    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -m "default.xml" -b "dev" -p "frameworks/native"
 #
+# Sample 2:  Make patch for single project `/home/willie/work/aosp/frameworks/native` in branch `master`. Omitting `-d` and `-m`:
+#
+#    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -p "/home/willie/work/aosp/frameworks/native"
+#
 # Sample 2: Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
 #
 #    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem" -b "master"
@@ -29,6 +33,7 @@
 #              b. Add option '-m', it is used to set manifest xml name in ".repo/manifests/" folder
 #              c. Check manifest xml <include> node
 #              d. When branch_name is empty, use <default> node `revision` attribute.
+# Version 1.5 2019-4-12 When make patch for only one project, `-d` option and `-m` can be omitted.
 
 import datetime
 import optparse
@@ -280,7 +285,7 @@ if __name__ == '__main__':
         print('Set end_time={}'.format(end_time))
     str_end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    repo_base_directory = os.path.dirname(os.path.realpath(__file__))
+    repo_base_directory = ''
     if is_empty(options.work_directory):
         print('Input work_directory is empty set repo_base_directory={}'.format(repo_base_directory))
     else:
@@ -321,27 +326,37 @@ if __name__ == '__main__':
 
     # Secondly parse manifest xml
     project_path_remote_name_dict = {}
+    default_branch_name = 'master'
     manifests_folder = repo_base_directory + '.repo/manifests/'
-    default_node_name = parse_manifest_xml(project_path_remote_name_dict, manifests_folder, manifest_xml, branch_name)
-    if single_project_path != '':
-        single_project_remote_name = project_path_remote_name_dict.get(single_project_path)
-        if is_empty(single_project_remote_name):
-            print('Fatal: project: {} and branch: {} NOT Match\nExiting...'.format(single_project_path, branch_name))
-            sys.exit(1)
+    if os.path.isdir(manifests_folder):
+        default_branch_name = parse_manifest_xml(project_path_remote_name_dict, manifests_folder, manifest_xml, branch_name)
+        if single_project_path != '':
+            single_project_remote_name = project_path_remote_name_dict.get(single_project_path)
+            if is_empty(single_project_remote_name):
+                print('Fatal: project: {} and branch: {} NOT Match\nExiting...'.format(single_project_path, branch_name))
+                sys.exit(1)
 
-        project_path_remote_name_dict.clear()
-        project_path_remote_name_dict[single_project_path] = single_project_remote_name
-        print('\nOnly make patch for project: {}\n'.format(single_project_path))
+            project_path_remote_name_dict.clear()
+            project_path_remote_name_dict[single_project_path] = single_project_remote_name
+            print('\nOnly make patch for project: {}\n'.format(single_project_path))
+        else:
+            # Try to append oem folder.
+            if not is_empty(oem_git_directory):
+                # oem_git_directory is absolute folder path
+                project_path_remote_name_dict['oem'] = 'origin'
+                print('Add project oem, path={}, remote=origin\n'.format(oem_git_directory))
     else:
-        # Try to append oem folder.
-        if not is_empty(oem_git_directory):
-            # oem_git_directory is absolute folder path
-            project_path_remote_name_dict['oem'] = 'origin'
-            print('Add project oem, path={}, remote=origin\n'.format(oem_git_directory))
+        print('Manifest folder not exist\n')
+        if single_project_path != '':
+            project_path_remote_name_dict[single_project_path] = 'origin'
+            print('\nOnly make patch for project: {}\n'.format(single_project_path))
+        else:
+            print('Input parameters invaild, exiting...')
+            sys.exit(1)
 
     # if input branch_name is '', use <default> node 'revision' attribute
     if is_empty(branch_name):
-        branch_name = default_node_name
+        branch_name = default_branch_name
         print('\nupdate branch_name to be {}\n'.format(branch_name))
 
     # Thirdly prepare output folder

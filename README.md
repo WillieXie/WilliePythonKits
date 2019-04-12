@@ -10,7 +10,7 @@ Use python to reduce some burden work
 
 ### make_new_old_patches_in_repo
 
-## DESCRIPTION
+#### DESCRIPTION
 
 **Make new old patches** under [repo](https://source.android.com/source/using-repo.html) working folder.
 
@@ -48,7 +48,13 @@ Then iterating all matched projects and make new old patch. The output is under 
    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -m "default.xml" -b "dev" -p "frameworks/native"
    ```
 
-2. Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
+2. Make patch for single project `/home/willie/work/aosp/frameworks/native` in branch `master`. Omitting `-d` and `-m`:
+
+   ``` bash
+   python3 make_new_old_patches_in_repo.py -s "2019-4-12 11:53:0" -p "/home/willie/work/aosp/frameworks/native"
+   ```
+
+3. Make patch for all projects in folder `/home/willie/work/aosp` and oem folder `/home/willie/work/aosp_oem` whose branch is `master`:
 
    ``` bash
    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem" -b "master"
