@@ -67,17 +67,17 @@ Now I want to create mirror repo directory in local server, however **DO NOT** s
 
 #### OPTIONS
 
-   --version             show program's version number and exit
-   -h, --help            show this help message and exit
-   -b BASE_FOLDER, --base=BASE_FOLDER
-                           base repo folder, default is ./base_repo
-   -d DEST_FOLDER, --dest=DEST_FOLDER
-                           dest mirror repo folder, default is ./mirror_repo
-   -r REMOTE_NAME, --remote=REMOTE_NAME
-                           remote node name in manifest.xml
-   -c CULL_PREFIX, --cull=CULL_PREFIX
-                           cull project name prefix in manifest.xml, default cull
-                           nothing
+    --version             show program's version number and exit
+    -h, --help            show this help message and exit
+    -b BASE_FOLDER, --base=BASE_FOLDER
+                            base repo folder, default is ./base_repo
+    -d DEST_FOLDER, --dest=DEST_FOLDER
+                            dest mirror repo folder, default is ./mirror_repo
+    -r REMOTE_NAME, --remote=REMOTE_NAME
+                            remote node name in manifest.xml
+    -c CULL_PREFIX, --cull=CULL_PREFIX
+                            cull project name prefix in manifest.xml, default cull
+                            nothing
 
 
 #### SAMPLE
