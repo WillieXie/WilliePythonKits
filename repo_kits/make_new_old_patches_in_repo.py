@@ -34,6 +34,7 @@
 #              c. Check manifest xml <include> node
 #              d. When branch_name is empty, use <default> node `revision` attribute.
 # Version 1.5 2019-4-12 When make patch for only one project, `-d` option and `-m` can be omitted.
+# Version 1.6 2019-4-18 Add `-c` option. It is used to make new old patch for single commit id with selected project.
 
 import datetime
 import optparse
@@ -44,7 +45,7 @@ import xml.etree.ElementTree as ET
 
 global_options = optparse.OptionParser(
     usage="make_new_old_patches_in_repo COMMAND [ARGS]"
-    , version="%prog 1.4")
+    , version="%prog 1.5")
 global_options.add_option('-s', '--start', action='store', type='string', dest='start_time', default='',
                           help='start time, default is today 00:00')
 global_options.add_option('-e', '--end', action='store', type='string', dest='end_time', default='',
@@ -59,7 +60,8 @@ global_options.add_option('-b', '--branch', action='store', type='string', dest=
                           help='branch name to identify <project>, if empty, use <default> node revision')
 global_options.add_option('-p', '--project', action='store', type='string', dest='project_path', default='',
                           help='single project path, if empty, checking all projects')
-
+global_options.add_option('-c', '--commit_id', action='store', type='string', dest='commit_id', default='',
+                          help='Single commit id in one project')
 
 def is_empty(s):
     """
@@ -137,6 +139,24 @@ def parse_manifest_xml(out_dict, manifest_folder, manifest_name, revision_name):
         parse_manifest_xml(out_dict, manifest_folder, include_xml_name, revision_name)
 
     return default_node_revision
+
+
+def fetch_commit_time(git_full_path, commit_id):
+    """
+    Find commit time of commit_id in git directory
+    :param git_full_path: Full path of git directory
+    :param commit_id: CommitID to be checked
+    :return: Commit time in string format
+    """
+    os.chdir(git_full_path)
+    str_fetch_commit_time_cmd = 'git show --pretty="%ci" {}'.format(commit_id)
+    str_commit_time = os.popen(str_fetch_commit_time_cmd).read().strip()
+    # Since current time is like "2019-04-08 19:30:38 +0800", Need to trim last "+0800"
+    last_space_idx = str_commit_time.rindex(' ')
+    trim_commit_time = str_commit_time[:last_space_idx]
+    print('str_commit_time={}, last_space_idx={}, trim_commit_time={}'.format(str_commit_time, last_space_idx, trim_commit_time))
+    return trim_commit_time
+    # return str_commit_time[:last_space_idx]
 
 
 def create_output_folder(base_folder_path, project_path_list):
@@ -324,10 +344,21 @@ if __name__ == '__main__':
         single_project_path = options.project_path
         print('Set single_project_path={}'.format(single_project_path))
 
+    single_commit_id = ''
+    if is_empty(options.commit_id):
+        print('Input commit_id is empty set single_commit_id={}'.format(single_commit_id))
+    else:
+        single_commit_id = options.commit_id
+        print('Set single_commit_id={}'.format(single_commit_id))
+
     # Secondly parse manifest xml
     project_path_remote_name_dict = {}
+
+    #If manifest.xml has <default> node, use that as default branch name, or use `master` branch
     default_branch_name = 'master'
     manifests_folder = repo_base_directory + '.repo/manifests/'
+
+    # Parse manifest when repo directory exist.
     if os.path.isdir(manifests_folder):
         default_branch_name = parse_manifest_xml(project_path_remote_name_dict, manifests_folder, manifest_xml, branch_name)
         if single_project_path != '':
@@ -347,6 +378,7 @@ if __name__ == '__main__':
                 print('Add project oem, path={}, remote=origin\n'.format(oem_git_directory))
     else:
         print('Manifest folder not exist\n')
+        # Add single project path to project_path_remote_name_dict
         if single_project_path != '':
             project_path_remote_name_dict[single_project_path] = 'origin'
             print('\nOnly make patch for project: {}\n'.format(single_project_path))
@@ -358,6 +390,20 @@ if __name__ == '__main__':
     if is_empty(branch_name):
         branch_name = default_branch_name
         print('\nupdate branch_name to be {}\n'.format(branch_name))
+
+    if not is_empty(single_commit_id):
+        if not is_empty(single_project_path):
+            single_project_full_path = repo_base_directory + single_project_path
+            str_single_project_commit_time = fetch_commit_time(single_project_full_path, single_commit_id)
+            # Update start_time and end_time
+            str_start_time = str_single_project_commit_time
+            start_time = datetime.datetime.strptime(str_start_time, '%Y-%m-%d  %H:%M:%S')
+            end_time = start_time + datetime.timedelta(seconds=1)
+            str_end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+            print('Project="{}"; commit-id="{}"; commit-time="{}" '.format(single_project_full_path, single_commit_id, str_single_project_commit_time))
+        else:
+            print('FATAL: project path is empty while commit-id is not')
+            sys.exit(1)
 
     # Thirdly prepare output folder
     curr_working_folder_path = os.path.dirname(os.path.realpath(__file__))

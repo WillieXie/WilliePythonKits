@@ -39,6 +39,9 @@ Then iterating all matched projects and make new old patch. The output is under 
                           <default> node revision
     -p PROJECT_PATH, --project=PROJECT_PATH
                           single project path, if empty, checking all projects
+    -c COMMIT_ID, --commit_id=COMMIT_ID
+                        Single commit id in one project
+
 
 #### SAMPLE
 
@@ -58,6 +61,12 @@ Then iterating all matched projects and make new old patch. The output is under 
 
    ``` bash
    python3 make_new_old_patches_in_repo.py -s "2019-4-11 21:21:0" -d "/home/willie/work/aosp" -o "/home/willie/work/aosp_oem" -b "master"
+   ```
+
+4. Make patch for single project `/home/willie/work/aosp/frameworks/base` for designated commit-id `d08a8210844fd9ce5308594bde5293ec48790c3e`:
+
+   ``` bash
+   python3 make_new_old_patches_in_repo.py -p /home/willie/work/aosp/frameworks/base -c d08a8210844fd9ce5308594bde5293ec48790c3e
    ```
 
 ### create_mirror_repo_from_local_folder
