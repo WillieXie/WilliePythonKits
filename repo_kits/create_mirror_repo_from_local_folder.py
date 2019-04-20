@@ -21,6 +21,8 @@
 # Version: 1.2 2019-4-11
 #              a. Use list instead of dictionary. So the final <project> node order in mirror manifest is the same as ori one.
 #              b. If some project path do not exist, remove them from manifest.xml
+# Version: 1.3 2019-4-20 Fix bug when there is <include> node in manifest.xml
+
 
 import optparse
 import os
@@ -32,7 +34,7 @@ from xml.dom import minidom
 
 global_options = optparse.OptionParser(
     usage="create_mirror_repo_from_local_folder COMMAND [ARGS]"
-    , version="%prog 1.2")
+    , version="%prog 1.3")
 global_options.add_option('-b', '--base', action='store', type='string', dest='base_folder', default='',
                           help='base repo folder, default is ./base_repo')
 global_options.add_option('-d', '--dest', action='store', type='string', dest='dest_folder', default='',
@@ -58,7 +60,7 @@ def is_empty(s):
 def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, manifest_folder, manifest_name,
                        project_name_prefix_cull=''):
     """
-    Parse .repo/manifest.xml, and find all <project> node save to out_dict\n
+    Parse .repo/manifest.xml, and find all <project> node save to path list and name list\n
     If there is <include> node, load the include manifest file\n
     :param out_project_path: output project path list
     :param out_project_name: output project name list
@@ -68,10 +70,10 @@ def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, 
     :param project_name_prefix_cull: <project> node `name` attribute prefix to cull
     :return: None
     """
+    print('\nstart parse_manifest_xml manifest_folder={}, manifest_name={}'.format(manifest_folder, manifest_name))
     if not manifest_folder.endswith('/'):
         manifest_folder = manifest_folder + '/'
     manifest_xml_path = manifest_folder + manifest_name
-    print('\nstart parse_manifest_xml path={}'.format(manifest_xml_path))
     tree = ET.parse(manifest_xml_path)
     root = tree.getroot()
 
@@ -90,14 +92,24 @@ def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, 
             print('Skip add project: {} for it does NOT exist'.format(project_full_path))
             continue
 
-        print('Add project name={}, path={}'.format(name, path))
-        out_project_path.append(path)
-        out_project_name.append(name)
+        # print('Add project name={}, path={}'.format(name, path))
+        if path in out_project_path:
+            # Update value in out_project_name list
+            path_idx = out_project_path.index(path)
+            old_name = out_project_name[path_idx]
+            out_project_name[path_idx] = name
+            print('Update project name={}, path={}'.format(out_project_name[path_idx], path))
+        else:
+            out_project_path.append(path)
+            out_project_name.append(name)
+            print('Add project name={}, path={}'.format(name, path))
 
     # Thirdly check include node
     for manifest in root.findall("./include"):
         include_xml_name = manifest.get('name')
-        parse_manifest_xml(out_project_path, out_project_name, manifest_folder, include_xml_name,
+        print(
+            '\nAdd include manifest manifest_folder={}, include_xml_name={}'.format(manifest_folder, include_xml_name))
+        parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, manifest_folder, include_xml_name,
                            project_name_prefix_cull)
 
 
@@ -237,7 +249,7 @@ def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list, pr
     os.system('git config --bool core.bare true')
 
     print(
-        '\ngenerate_manifest done. You can sync this mirror repo with the following command:\\nnrepo init -u {}\nrepo sync -c -j4\n'.format(
+        '\ngenerate_manifest done. You can sync this mirror repo with the following command:\nrepo init -u {}\nrepo sync -c -j4\n'.format(
             bare_manifests_folder_path))
     return bare_manifests_folder_path
 

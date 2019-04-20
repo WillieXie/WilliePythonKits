@@ -45,7 +45,7 @@ import xml.etree.ElementTree as ET
 
 global_options = optparse.OptionParser(
     usage="make_new_old_patches_in_repo COMMAND [ARGS]"
-    , version="%prog 1.5")
+    , version="%prog 1.6")
 global_options.add_option('-s', '--start', action='store', type='string', dest='start_time', default='',
                           help='start time, default is today 00:00')
 global_options.add_option('-e', '--end', action='store', type='string', dest='end_time', default='',
@@ -62,6 +62,7 @@ global_options.add_option('-p', '--project', action='store', type='string', dest
                           help='single project path, if empty, checking all projects')
 global_options.add_option('-c', '--commit_id', action='store', type='string', dest='commit_id', default='',
                           help='Single commit id in one project')
+
 
 def is_empty(s):
     """
@@ -154,7 +155,8 @@ def fetch_commit_time(git_full_path, commit_id):
     # Since current time is like "2019-04-08 19:30:38 +0800", Need to trim last "+0800"
     last_space_idx = str_commit_time.rindex(' ')
     trim_commit_time = str_commit_time[:last_space_idx]
-    print('str_commit_time={}, last_space_idx={}, trim_commit_time={}'.format(str_commit_time, last_space_idx, trim_commit_time))
+    print('str_commit_time={}, last_space_idx={}, trim_commit_time={}'.format(str_commit_time, last_space_idx,
+                                                                              trim_commit_time))
     return trim_commit_time
     # return str_commit_time[:last_space_idx]
 
@@ -354,17 +356,19 @@ if __name__ == '__main__':
     # Secondly parse manifest xml
     project_path_remote_name_dict = {}
 
-    #If manifest.xml has <default> node, use that as default branch name, or use `master` branch
+    # If manifest.xml has <default> node, use that as default branch name, or use `master` branch
     default_branch_name = 'master'
     manifests_folder = repo_base_directory + '.repo/manifests/'
 
     # Parse manifest when repo directory exist.
     if os.path.isdir(manifests_folder):
-        default_branch_name = parse_manifest_xml(project_path_remote_name_dict, manifests_folder, manifest_xml, branch_name)
+        default_branch_name = parse_manifest_xml(project_path_remote_name_dict, manifests_folder, manifest_xml,
+                                                 branch_name)
         if single_project_path != '':
             single_project_remote_name = project_path_remote_name_dict.get(single_project_path)
             if is_empty(single_project_remote_name):
-                print('Fatal: project: {} and branch: {} NOT Match\nExiting...'.format(single_project_path, branch_name))
+                print(
+                    'Fatal: project: {} and branch: {} NOT Match\nExiting...'.format(single_project_path, branch_name))
                 sys.exit(1)
 
             project_path_remote_name_dict.clear()
@@ -400,7 +404,8 @@ if __name__ == '__main__':
             start_time = datetime.datetime.strptime(str_start_time, '%Y-%m-%d  %H:%M:%S')
             end_time = start_time + datetime.timedelta(seconds=1)
             str_end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
-            print('Project="{}"; commit-id="{}"; commit-time="{}" '.format(single_project_full_path, single_commit_id, str_single_project_commit_time))
+            print('Project="{}"; commit-id="{}"; commit-time="{}" '.format(single_project_full_path, single_commit_id,
+                                                                           str_single_project_commit_time))
         else:
             print('FATAL: project path is empty while commit-id is not')
             sys.exit(1)
