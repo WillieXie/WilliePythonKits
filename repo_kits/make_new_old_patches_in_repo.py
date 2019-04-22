@@ -150,7 +150,7 @@ def fetch_commit_time(git_full_path, commit_id):
     :return: Commit time in string format
     """
     os.chdir(git_full_path)
-    str_fetch_commit_time_cmd = 'git show --pretty="%ci" {}'.format(commit_id)
+    str_fetch_commit_time_cmd = 'git log --pretty="%ci" {} -1'.format(commit_id)
     str_commit_time = os.popen(str_fetch_commit_time_cmd).read().strip()
     # Since current time is like "2019-04-08 19:30:38 +0800", Need to trim last "+0800"
     last_space_idx = str_commit_time.rindex(' ')
@@ -390,6 +390,11 @@ if __name__ == '__main__':
             print('Input parameters invaild, exiting...')
             sys.exit(1)
 
+    # Thirdly prepare output folder
+    curr_working_folder_path = os.path.dirname(os.path.realpath(__file__))
+    out_base_folder_path = curr_working_folder_path
+    create_output_folder(out_base_folder_path, project_path_remote_name_dict.keys())
+
     # if input branch_name is '', use <default> node 'revision' attribute
     if is_empty(branch_name):
         branch_name = default_branch_name
@@ -400,20 +405,18 @@ if __name__ == '__main__':
             single_project_full_path = repo_base_directory + single_project_path
             str_single_project_commit_time = fetch_commit_time(single_project_full_path, single_commit_id)
             # Update start_time and end_time
-            str_start_time = str_single_project_commit_time
-            start_time = datetime.datetime.strptime(str_start_time, '%Y-%m-%d  %H:%M:%S')
-            end_time = start_time + datetime.timedelta(seconds=1)
+            start_time = datetime.datetime.strptime(str_single_project_commit_time,
+                                                    '%Y-%m-%d  %H:%M:%S') - datetime.timedelta(seconds=1)
+            str_start_time = start_time.strftime("%Y-%m-%d %H:%M:%S")
+            end_time = start_time + datetime.timedelta(seconds=2)
             str_end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
-            print('Project="{}"; commit-id="{}"; commit-time="{}" '.format(single_project_full_path, single_commit_id,
-                                                                           str_single_project_commit_time))
+            print('Project="{}"; commit-id="{}"; commit-time="{}"; start_time="{}"; end_time="{}"'.format(
+                single_project_full_path, single_commit_id,
+                str_single_project_commit_time, str_start_time, str_end_time))
         else:
             print('FATAL: project path is empty while commit-id is not')
             sys.exit(1)
 
-    # Thirdly prepare output folder
-    curr_working_folder_path = os.path.dirname(os.path.realpath(__file__))
-    out_base_folder_path = curr_working_folder_path
-    create_output_folder(out_base_folder_path, project_path_remote_name_dict.keys())
 
     # Fourthly Create log file.
     str_time_now = datetime.datetime.now().strftime('%Y-%m-%d__%H-%M-%S')
