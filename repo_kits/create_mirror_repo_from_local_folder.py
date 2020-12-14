@@ -35,13 +35,17 @@ from xml.dom import minidom
 global_options = optparse.OptionParser(
     usage="create_mirror_repo_from_local_folder COMMAND [ARGS]"
     , version="%prog 1.3")
-global_options.add_option('-b', '--base', action='store', type='string', dest='base_folder', default='',
+global_options.add_option('-b', '--base', action='store', type='string',
+                          dest='base_folder', default='',
                           help='base repo folder, default is ./base_repo')
-global_options.add_option('-d', '--dest', action='store', type='string', dest='dest_folder', default='',
+global_options.add_option('-d', '--dest', action='store', type='string',
+                          dest='dest_folder', default='',
                           help='dest mirror repo folder, default is ./mirror_repo')
-global_options.add_option('-r', '--remote', action='store', type='string', dest='remote_name', default='',
+global_options.add_option('-r', '--remote', action='store', type='string',
+                          dest='remote_name', default='',
                           help='remote node name in manifest.xml')
-global_options.add_option('-c', '--cull', action='store', type='string', dest='cull_prefix', default='',
+global_options.add_option('-c', '--cull', action='store', type='string',
+                          dest='cull_prefix', default='',
                           help='cull project name prefix in manifest.xml, default cull nothing')
 
 global_default_git_user_name = 'willie'
@@ -57,7 +61,8 @@ def is_empty(s):
     return (s is None) or (s == "")
 
 
-def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, manifest_folder, manifest_name,
+def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory,
+                       manifest_folder, manifest_name,
                        project_name_prefix_cull=''):
     """
     Parse .repo/manifest.xml, and find all <project> node save to path list and name list\n
@@ -70,7 +75,9 @@ def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, 
     :param project_name_prefix_cull: <project> node `name` attribute prefix to cull
     :return: None
     """
-    print('\nstart parse_manifest_xml manifest_folder={}, manifest_name={}'.format(manifest_folder, manifest_name))
+    print(
+        '\nstart parse_manifest_xml manifest_folder={}, manifest_name={}'.format(
+            manifest_folder, manifest_name))
     if not manifest_folder.endswith('/'):
         manifest_folder = manifest_folder + '/'
     manifest_xml_path = manifest_folder + manifest_name
@@ -89,7 +96,8 @@ def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, 
             path = name
         project_full_path = repo_base_directory + path
         if not os.path.isdir(project_full_path):
-            print('Skip add project: {} for it does NOT exist'.format(project_full_path))
+            print('Skip add project: {} for it does NOT exist'.format(
+                project_full_path))
             continue
 
         # print('Add project name={}, path={}'.format(name, path))
@@ -98,7 +106,8 @@ def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, 
             path_idx = out_project_path.index(path)
             old_name = out_project_name[path_idx]
             out_project_name[path_idx] = name
-            print('Update project name={}, path={}'.format(out_project_name[path_idx], path))
+            print('Update project name={}, path={}'.format(
+                out_project_name[path_idx], path))
         else:
             out_project_path.append(path)
             out_project_name.append(name)
@@ -108,12 +117,16 @@ def parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, 
     for manifest in root.findall("./include"):
         include_xml_name = manifest.get('name')
         print(
-            '\nAdd include manifest manifest_folder={}, include_xml_name={}'.format(manifest_folder, include_xml_name))
-        parse_manifest_xml(out_project_path, out_project_name, repo_base_directory, manifest_folder, include_xml_name,
+            '\nAdd include manifest manifest_folder={}, include_xml_name={}'.format(
+                manifest_folder, include_xml_name))
+        parse_manifest_xml(out_project_path, out_project_name,
+                           repo_base_directory, manifest_folder,
+                           include_xml_name,
                            project_name_prefix_cull)
 
 
-def handle_single_repository(base_repo_path, mirror_repo_path, project_name, project_path):
+def handle_single_repository(base_repo_path, mirror_repo_path, project_name,
+                             project_path):
     """
     create project bare repository from working folder `.git` folder
     :param base_repo_path: base repo path
@@ -138,13 +151,15 @@ def handle_single_repository(base_repo_path, mirror_repo_path, project_name, pro
     # Since `git checkout -b master` may failed for `master` branch existed, Here use `subprocess.run` hide output
     # information.
     # os.system('git checkout -b master')
-    subprocess.run(['git', 'checkout', '-b', 'master'], stdout=subprocess.DEVNULL,
+    subprocess.run(['git', 'checkout', '-b', 'master'],
+                   stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)
 
     # *Note* here must add `-L` option for `cp` command, so source file instead of symbolic file can be copied.
     # Use `subprocess.run` instead of `os.system` since in `subprocess.run`, I can hide output information.
     # os.system('cp -rL {} {}'.format(project_git_path, dest_project_path))
-    subprocess.run(['cp', '-rL', project_git_path, dest_project_path], stdout=subprocess.DEVNULL,
+    subprocess.run(['cp', '-rL', project_git_path, dest_project_path],
+                   stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)
     # enter dest_project_path
     os.chdir(dest_project_path)
@@ -154,7 +169,8 @@ def handle_single_repository(base_repo_path, mirror_repo_path, project_name, pro
     print("finish processing {}\n".format(dest_project_path))
 
 
-def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list, project_name_list, remote_name,
+def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list,
+                      project_name_list, remote_name,
                       project_name_prefix_cull):
     """
     Create New manifest.xml based on the original one.\n
@@ -170,8 +186,9 @@ def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list, pr
     """
     manifests_work_folder_path = mirror_repo_path + ".repo/manifests"
     dest_manifest_xml_path = manifests_work_folder_path + '/default.xml'
-    print('\ngenerate_manifest start manifests_work_folder_path={}\ndest_manifest_xml_path={}'.format(
-        manifests_work_folder_path, dest_manifest_xml_path))
+    print(
+        '\ngenerate_manifest start manifests_work_folder_path={}\ndest_manifest_xml_path={}'.format(
+            manifests_work_folder_path, dest_manifest_xml_path))
     os.makedirs(manifests_work_folder_path)
     os.chdir(manifests_work_folder_path)
 
@@ -193,7 +210,8 @@ def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list, pr
     # Create manifest.xml
     mirror_root = ET.Element('manifest')
     mirror_root.set('version', '1.0')
-    mirror_root.append(ET.Comment('Generated by WilliePythonKits cr.py for mirror repo'))
+    mirror_root.append(
+        ET.Comment('Generated by WilliePythonKits cr.py for mirror repo'))
 
     mirror_remote_node = ET.SubElement(mirror_root, 'remote')
     mirror_remote_node.set('fetch', '..')
@@ -228,7 +246,8 @@ def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list, pr
     # If use ``ElementTree.write()`` to create xml, the saved file is badly formatted.
     # So here use ``xml.dom.minidom`` to transform xml to string, then save xml
     # ET.ElementTree(mirror_root).write(dest_manifest_xml_path)
-    str_manifest_xml = minidom.parseString(ET.tostring(mirror_root)).toprettyxml(indent="   ")
+    str_manifest_xml = minidom.parseString(
+        ET.tostring(mirror_root)).toprettyxml(indent="   ")
     with open(dest_manifest_xml_path, "w") as f:
         f.write(str_manifest_xml)
 
@@ -237,11 +256,13 @@ def generate_manifest(mirror_repo_path, ori_manifest_path, project_path_list, pr
     os.system('git commit -m "Init the manifests repository"')
     work_manifests_git_folder_path = manifests_work_folder_path + "/.git"
     bare_manifests_folder_path = mirror_repo_path + 'platform/manifests.git'
-    bare_manifests_parent_folder_path = os.path.dirname(bare_manifests_folder_path)
+    bare_manifests_parent_folder_path = os.path.dirname(
+        bare_manifests_folder_path)
     if not os.path.isdir(bare_manifests_parent_folder_path):
         os.makedirs(bare_manifests_parent_folder_path)
 
-    subprocess.run(['cp', '-rL', work_manifests_git_folder_path, bare_manifests_folder_path], stdout=subprocess.DEVNULL,
+    subprocess.run(['cp', '-rL', work_manifests_git_folder_path,
+                    bare_manifests_folder_path], stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)
     # enter dest_project_path
     os.chdir(bare_manifests_folder_path)
@@ -259,9 +280,11 @@ if __name__ == '__main__':
     print('Mission Start!\nStep 1 : fetch parameters')
     (options, args) = global_options.parse_args()
 
-    repo_base_directory = os.path.dirname(os.path.realpath(__file__)) + 'base_repo/'
+    repo_base_directory = os.path.dirname(
+        os.path.realpath(__file__)) + 'base_repo/'
     if (options.base_folder is None) or (options.base_folder == ""):
-        print('Input base_folder is empty set repo_base_directory={}'.format(repo_base_directory))
+        print('Input base_folder is empty set repo_base_directory={}'.format(
+            repo_base_directory))
     else:
         repo_base_directory = options.base_folder
         if not repo_base_directory.endswith('/'):
@@ -269,12 +292,15 @@ if __name__ == '__main__':
         print('Set repo_base_directory={}'.format(repo_base_directory))
 
     if not os.path.isdir(repo_base_directory):
-        print('Error base repo folder {} is not exist'.format(repo_base_directory))
+        print('Error base repo folder {} is not exist'.format(
+            repo_base_directory))
         sys.exit()
 
-    repo_mirror_directory = os.path.dirname(os.path.realpath(__file__)) + 'mirror_repo/'
+    repo_mirror_directory = os.path.dirname(
+        os.path.realpath(__file__)) + 'mirror_repo/'
     if (options.dest_folder is None) or (options.dest_folder == ""):
-        print('Input dest_folder is empty set repo_mirror_directory={}'.format(repo_mirror_directory))
+        print('Input dest_folder is empty set repo_mirror_directory={}'.format(
+            repo_mirror_directory))
     else:
         repo_mirror_directory = options.dest_folder
         if not repo_mirror_directory.endswith('/'):
@@ -288,60 +314,75 @@ if __name__ == '__main__':
 
     repo_remote_name = 'willie'
     if (options.remote_name is None) or (options.remote_name == ''):
-        print('Input remote_name is empty set repo_remote_name={}'.format(repo_remote_name))
+        print('Input remote_name is empty set repo_remote_name={}'.format(
+            repo_remote_name))
     else:
         repo_remote_name = options.remote_name
         print('Set repo_remote_name={}'.format(repo_remote_name))
 
     project_name_prefix_cull = ''
     if (options.cull_prefix is None) or (options.cull_prefix == ''):
-        print('Input cull_prefix is empty set project_name_prefix_cull={}'.format(''))
+        print(
+            'Input cull_prefix is empty set project_name_prefix_cull={}'.format(
+                ''))
     else:
         project_name_prefix_cull = options.cull_prefix
         if not project_name_prefix_cull.endswith('/'):
             project_name_prefix_cull = project_name_prefix_cull + '/'
-        print('Set project_name_prefix_cull={}'.format(project_name_prefix_cull))
+        print(
+            'Set project_name_prefix_cull={}'.format(project_name_prefix_cull))
 
     print('\nStep 2 : ensure git user.name and user.email has set')
     str_fetch_git_user_name_cmd = 'git config user.name'
     git_user_name = os.popen(str_fetch_git_user_name_cmd).read().strip()
     if (git_user_name is None) or (git_user_name == ""):
         print('set git user.name to be {}'.format(global_default_git_user_name))
-        os.system('git config --global user.name {}'.format(global_default_git_user_name))
+        os.system('git config --global user.name {}'.format(
+            global_default_git_user_name))
     str_fetch_git_user_email_cmd = 'git config user.email'
     git_user_email = os.popen(str_fetch_git_user_email_cmd).read().strip()
     if (git_user_email is None) or (git_user_email == ""):
-        print('set git user.email to be {}'.format(global_default_git_user_email))
-        os.system('git config --global user.email {}'.format(global_default_git_user_email))
+        print(
+            'set git user.email to be {}'.format(global_default_git_user_email))
+        os.system('git config --global user.email {}'.format(
+            global_default_git_user_email))
 
     # Thirdly parse manifest xml
-    print('\nStep 3 : parse ori repo folder .repo/manifest.xml to fetch all projects')
+    print(
+        '\nStep 3 : parse ori repo folder .repo/manifest.xml to fetch all projects')
     # Since `.repo/manifest.xml` is symbolic link file, use `readlink -f ` command to find source path
     link_manifest_xml_path = repo_base_directory + '.repo/manifest.xml'
     fetch_source_manifest_cmd = 'readlink -f {}'.format(link_manifest_xml_path)
-    source_manifest_xml_path = os.popen(fetch_source_manifest_cmd).read().strip()
+    source_manifest_xml_path = os.popen(
+        fetch_source_manifest_cmd).read().strip()
     manifest_xml_folder = os.path.dirname(source_manifest_xml_path)
     manifest_xml_name = os.path.basename(source_manifest_xml_path)
-    print('Start parsing manifest folder={}, name={}'.format(manifest_xml_folder, manifest_xml_name))
+    print(
+        'Start parsing manifest folder={}, name={}'.format(manifest_xml_folder,
+                                                           manifest_xml_name))
 
     project_path_list = []
     project_name_list = []
-    parse_manifest_xml(project_path_list, project_name_list, repo_base_directory, manifest_xml_folder,
+    parse_manifest_xml(project_path_list, project_name_list,
+                       repo_base_directory, manifest_xml_folder,
                        manifest_xml_name,
                        project_name_prefix_cull)
-    print('There are {} projects to be created\n'.format(len(project_path_list)))
+    print(
+        'There are {} projects to be created\n'.format(len(project_path_list)))
 
     # Fourthly generate bare repository in repo_mirror_directory
     print('\nStep 4 : create all projects bare git repository')
     index = 0
     for path, name in zip(project_path_list, project_name_list):
         print('\nStart handling No.{} project {}'.format(index, name))
-        handle_single_repository(repo_base_directory, repo_mirror_directory, name, path)
+        handle_single_repository(repo_base_directory, repo_mirror_directory,
+                                 name, path)
         index = index + 1
 
     # Fifthly generate manifest bare repository
     print('\nStep 5 : generate platform/manifests.git')
-    generate_manifest(repo_mirror_directory, source_manifest_xml_path, project_path_list, project_name_list,
+    generate_manifest(repo_mirror_directory, source_manifest_xml_path,
+                      project_path_list, project_name_list,
                       repo_remote_name, project_name_prefix_cull)
 
     print('Mission Complete!')
