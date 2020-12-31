@@ -2,6 +2,7 @@
 Use python to reduce some burden work
 
 - [Repo Kits](#repokits)
+- [System Kits](#systemkits)
 
 ## RepoKits
 
@@ -101,4 +102,59 @@ Now I want to create mirror repo directory in local server, however **DO NOT** s
 
    ``` bash
    python3 create_mirror_repo_from_local_folder.py -b "/home/willie/work/android/aosp" -d "/home/willie/work/repo_android_mirror"
+   ```
+
+
+## SystemKits
+
+- [Create Gerrit projects by xml](#CreateGerritProjectsByXml)
+
+### CreateGerritProjectsByXml
+
+#### DESCRIPTION
+
+[repo](https://source.android.com/source/using-repo.html) use manifests.xml to control projects.
+This script can create projects on Gerrit website with ssh command after reading manifests.xml.
+It can also push first commit to Gerrit website from working directory.  
+
+#### OPTIONS
+
+      --version             show program's version number and exit
+      -h, --help            show this help message and exit
+      -a GERRIT_ACCOUNT, --account=GERRIT_ACCOUNT
+                              Administrator account to operate gerrit, default is
+                              gerrit_admin
+      -b BASE_XML, --base=BASE_XML
+                              Base manifests.xml path, default is default.xml
+      -p PROJECT_PREFIX, --prefix=PROJECT_PREFIX
+                              Every project prefix, default is empty
+      -i INHERIT_PROJECT, --inherit=INHERIT_PROJECT
+                              Privilege project to inherit from, default is All-
+                              Projects
+      -o PROJECT_OWNER, --owner=PROJECT_OWNER
+                              Owner of every project, default is Administrators
+      -d WORK_DIRECTORY, --directory=WORK_DIRECTORY
+                              Repo work directory, default is empty
+      -s GERRIT_SITE, --site=GERRIT_SITE
+                              Gerrit site for push operation, default is empty
+      -u GERRIT_USER, --user=GERRIT_USER
+                              Gerrit user for push operation, default is empty
+
+
+#### SAMPLE
+
+manifest xml `default.xml` has single <project> node:
+
+    <project path="frameworks/native" />
+
+1. Create Gerrit project `Android/201212/frameworks/native` base on `BasePrivilege`, owner is `Administrators`:
+
+   ``` bash
+   python3 CreateGerritProjectsByXml.py -b default.xml -p Android/201212 -i BasePrivilege -o Administrators -a gerrit_admin
+   ```
+
+2. Push working directory `frameworks/native` code to Gerrit website:
+
+   ``` bash
+   python3 CreateGerritProjectsByXml.py -b default.xml -p Android/201212 -u willie -s 192.168.1.100
    ```
