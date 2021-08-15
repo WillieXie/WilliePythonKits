@@ -33,13 +33,13 @@ There are two modes:
 
    Command is:
 
-      python3 MonkeyRecharge -p Abc123
+      python3 MonkeyRecharge -p xxxxxx
 
 Use:
 
    `python3 MonkeyRecharge -h`
 
-   to get help
+   to learn other commands
 
 """
 import sys
@@ -47,11 +47,12 @@ import time
 import optparse
 import os
 import pyautogui
+import random
 
 # Sampling coordinates delay
 global_sampling_delay = 5
-global_commit_wait = 5
-global_back_wait = 2
+global_commit_wait = 8
+global_back_wait = 3
 
 global_coordinates_file_name = 'coordinates.txt'
 global_type_amount = 'amount'
@@ -60,7 +61,7 @@ global_type_confirm = 'confirm'
 global_coordinates_x_dict = {}
 global_coordinates_y_dict = {}
 global_payment_password = ''
-global_recharge_amount = '0.01'
+global_recharge_amount = '0.1'
 global_recharge_times = 2
 
 global_options = optparse.OptionParser(
@@ -76,13 +77,16 @@ global_options.add_option('-d', '--delete', action='store_true', dest='delete_co
                           help=f'Delete file {global_coordinates_file_name}')
 global_options.add_option('-p', '--password', action='store', type='string',
                           dest='payment_password', default='',
-                          help='Payment password')
+                          help='Payment password. **MUST Input everytime**')
 global_options.add_option('-m', '--money', action='store', type='string',
                           dest='recharge_amount', default=global_recharge_amount,
-                          help='Recharge amount')
+                          help=f"Largest recharge amount. Really recharge amount is a random number under it. Default is {global_recharge_amount}")
 global_options.add_option('-t', '--times', action='store', type='string',
                           dest='recharge_times', default=str(global_recharge_times),
-                          help='Recharge amount')
+                          help=f'Recharge times. Default is {global_recharge_times}')
+global_options.add_option('-w', '--wait', action='store', type='string',
+                          dest='wait_seconds', default=str(global_commit_wait),
+                          help=f'Waiting seconds after click confirm button. Default is {global_commit_wait}')
 
 
 def record_coordinates_to_file(x, y, typename, mode):
@@ -169,14 +173,20 @@ if __name__ == '__main__':
     load_coordinates_from_file()
 
     if (options.payment_password is None) or (options.payment_password == ""):
-        print(f'Failed for not setting password. Input with `-p xxx.\n\nExit...`')
+        print(f'Failed for not setting password. Input with `-p xxx`.\n\nExit...')
         sys.exit(1)
     else:
         global_payment_password = options.payment_password
 
     global_recharge_amount = options.recharge_amount
     global_recharge_times = int(options.recharge_times)
-    print(f'\nRecharge amount={global_recharge_amount}; Total recharge times={global_recharge_times}\n\nStart recharge')
+    global_commit_wait = int(options.wait_seconds)
+    global_back_wait = int(global_commit_wait * 0.4)
+    print(
+        f'\nRecharge max amount={global_recharge_amount}; Total recharge times={global_recharge_times}; Wait seconds=({global_commit_wait}/{global_back_wait})\n\nStart recharge')
+    max_random_amount = int(float(global_recharge_amount) / 0.01)
+    str_amount = global_recharge_amount
+    random_amount = 0.01
 
     total_recharge = 0
     input_amount_x = global_coordinates_x_dict[global_type_amount]
@@ -187,22 +197,25 @@ if __name__ == '__main__':
     confirm_y = global_coordinates_y_dict[global_type_confirm]
     tic = time.perf_counter()
     for idx in range(global_recharge_times):
+        random_amount = random.randint(1, max_random_amount) * 0.01
+        str_amount = str(random_amount)
+
         if idx % 10 == 9:
             toc = time.perf_counter()
             print(f"\nProgram has been running for {toc - tic:0.4f} seconds\n")
 
-        print(f'({idx + 1}/{global_recharge_times}) recharge start.')
+        print(f'({idx + 1}/{global_recharge_times}) recharge start, amount={str_amount}')
         pyautogui.click(input_amount_x, input_amount_y)
         # Use Ctrl+A & Delete to clear amount
         pyautogui.hotkey('ctrl', 'a')
         pyautogui.press('delete')
-        pyautogui.write(global_recharge_amount, interval=0.05)
+        pyautogui.write(str_amount, interval=0.05)
         pyautogui.press('tab')
         pyautogui.write(global_payment_password, interval=0.05)
         pyautogui.click(confirm_x, confirm_y)
         time.sleep(global_commit_wait)
         pyautogui.click(go_back_x, go_back_y)
-        total_recharge += float(global_recharge_amount)
+        total_recharge += random_amount
         print(f'({idx + 1}/{global_recharge_times}) recharge done. Total recharged: {total_recharge:.2f}')
         time.sleep(global_back_wait)
 
